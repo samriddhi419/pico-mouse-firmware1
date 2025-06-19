@@ -16,14 +16,16 @@ jobs:
           sudo apt update
           sudo apt install -y gcc-arm-none-eabi libnewlib-arm-none-eabi make python3
 
-      - name: Rename USB product
+      - name: Modify USB descriptor
         run: |
           sed -i 's/USB_PRODUCT = .*/USB_PRODUCT = "Mouse"/' ports/raspberrypi/boards/raspberry_pi_pico/mpconfigboard.mk
           sed -i 's/USB_MANUFACTURER = .*/USB_MANUFACTURER = "Generic"/' ports/raspberrypi/boards/raspberry_pi_pico/mpconfigboard.mk
 
+      - name: Fetch version tags
+        run: make fetch-tags
+
       - name: Build firmware
-        run: |
-          make -C ports/raspberrypi BOARD=raspberry_pi_pico
+        run: make -C ports/raspberrypi BOARD=raspberry_pi_pico
 
       - name: Upload UF2
         uses: actions/upload-artifact@v4
