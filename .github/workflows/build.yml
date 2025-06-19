@@ -5,6 +5,7 @@ on: workflow_dispatch
 jobs:
   build_pico:
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout CircuitPython source
         uses: actions/checkout@v3
@@ -12,31 +13,35 @@ jobs:
           repository: adafruit/circuitpython
           submodules: recursive
 
-      - name: Install dependencies (Python + tools)
+      - name: Install system dependencies
         run: |
           sudo apt update
           sudo apt install -y python3 python3-pip make cmake ninja-build libusb-1.0-0-dev
+
+      - name: Install Python build tools
+        run: |
           python3 -m pip install --upgrade pip
           pip install cascadetoml
 
-      - name: Install latest Arm GCC toolchain (version 14)
+      - name: Install ARM GCC Toolchain (v14)
         run: |
-          wget -q https://developer.arm.com/-/media/Files/downloads/gnu-rm/14.0.Rel1/gcc-arm-none-eabi-14.0.rel1-x86_64-linux.tar.bz2
+          wget https://github.com/ARM-software/gnu-rm/releases/download/gnu-rm-14.0.rel1/gcc-arm-none-eabi-14.0.rel1-x86_64-linux.tar.bz2
           tar -xjf gcc-arm-none-eabi-14.0.rel1-x86_64-linux.tar.bz2
           echo "$PWD/gcc-arm-none-eabi-14.0.rel1-x86_64-linux/bin" >> $GITHUB_PATH
+          rm gcc-arm-none-eabi-14.0.rel1-x86_64-linux.tar.bz2
 
-      - name: Modify USB descriptor (Mouse only)
+      - name: Modify USB descriptor (Custom HID Name)
         run: |
-          sed -i 's/USB_PRODUCT = .*/USB_PRODUCT = "Mouse"/' ports/raspberrypi/boards/raspberry_pi_pico/mpconfigboard.mk
-          sed -i 's/USB_MANUFACTURER = .*/USB_MANUFACTURER = "Generic"/' ports/raspberrypi/boards/raspberry_pi_pico/mpconfigboard.mk
+          sed -i 's/^USB_PRODUCT = .*/USB_PRODUCT = "Mouse"/' ports/raspberrypi/boards/raspberry_pi_pico/mpconfigboard.mk
+          sed -i 's/^USB_MANUFACTURER = .*/USB_MANUFACTURER = "Generic"/' ports/raspberrypi/boards/raspberry_pi_pico/mpconfigboard.mk
 
       - name: Fetch version tags
         run: make fetch-tags
 
-      - name: Build firmware
+      - name: Build CircuitPython firmware for Pico
         run: make -C ports/raspberrypi BOARD=raspberry_pi_pico
 
-      - name: Upload UF2 firmware
+      - name: Upload UF2 firmware artifact
         uses: actions/upload-artifact@v4
         with:
           name: pico-mouse-firmware
