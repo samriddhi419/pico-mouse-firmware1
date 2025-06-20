@@ -23,10 +23,13 @@ jobs:
           python3 -m pip install --upgrade pip
           pip install cascadetoml
 
-      - name: Install ARM GCC Toolchain (arm-none-eabi-gcc)
+      - name: Install ARM GCC Toolchain (official v14.2)
         run: |
-          sudo apt-get update
-          sudo apt-get install -y gcc-arm-none-eabi
+          wget https://github.com/ARM-software/LLVM-embedded-toolchain-for-Arm/releases/download/llvm-14.2.rel1/LLVMEmbeddedToolchainForArm-14.2.rel1-linux-x86_64.tar.gz -O toolchain.tar.gz
+          mkdir -p toolchain
+          tar -xzf toolchain.tar.gz -C toolchain --strip-components=1
+          echo "$PWD/toolchain/bin" >> $GITHUB_PATH
+          rm toolchain.tar.gz
 
       - name: Modify USB descriptor (Custom HID Name)
         run: |
